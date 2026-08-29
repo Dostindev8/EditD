@@ -1,0 +1,32 @@
+{
+  "name": "lcs-dominican",
+  "private": true,
+  "version": "0.1.0",
+  "description": "LCS.Dominican — unified AI audiovisual creation platform (Phase 0 + free creator)",
+  "workspaces": [
+    "apps/web",
+    "apps/api",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c green,cyan \"npm run dev -w @lcs/api\" \"npm run dev -w @lcs/web\"",
+    "build": "npm run build -w @lcs/shared && npm run build -w @lcs/api && npm run build -w @lcs/web",
+    "lint": "npm run lint -w @lcs/web && npm run lint -w @lcs/api",
+    "audit:ci": "npm audit --audit-level=high"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "overrides": {
+    "postcss": "8.5.6",
+    "sharp": "0.34.5",
+    "uuid": "11.1.1",
+    "next": {
+      "postcss": "8.5.6",
+      "sharp": "0.34.5"
+    }
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

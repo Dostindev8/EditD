@@ -1,0 +1,25 @@
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - lcs_mongo:/data/db
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: lcs
+      POSTGRES_PASSWORD: lcs
+      POSTGRES_DB: lcs_billing
+    ports:
+      - "5432:5432"
+    volumes:
+      - lcs_pg:/var/lib/postgresql/data
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  lcs_mongo:
+  lcs_pg:
