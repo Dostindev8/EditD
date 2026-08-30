@@ -4,7 +4,12 @@ import { Server, Socket } from "socket.io";
 import type { GenerationSocketEvent } from "../generation/generation.types.js";
 
 @WebSocketGateway({
-  cors: { origin: process.env.WEB_ORIGIN ?? "http://localhost:3000", credentials: true },
+  cors: {
+    origin: (origin: string, callback: (err: Error | null, allow?: boolean) => void) => {
+      callback(null, true);
+    },
+    credentials: true,
+  },
   transports: ["websocket", "polling"],
 })
 @Injectable()

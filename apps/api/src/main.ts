@@ -26,8 +26,27 @@ async function bootstrap() {
     }),
   );
   app.use(cookieParser());
+  const webOrigins = process.env.WEB_ORIGIN
+    ? process.env.WEB_ORIGIN.split(",").map((s) => s.trim())
+    : ["http://localhost:3000"];
+
   app.enableCors({
-    origin: process.env.WEB_ORIGIN ?? "http://localhost:3000",
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      if (!origin) return callback(null, true);
+      if (
+        webOrigins.includes("*") ||
+        webOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app") ||
+        origin.includes("localhost") ||
+        process.env.NODE_ENV !== "production"
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Permissive fallback for seamless cloud proxy
+    },
     credentials: true,
   });
   app.setGlobalPrefix("api");
@@ -39,10 +58,10 @@ async function bootstrap() {
     }),
   );
 
-  const port = Number(process.env.API_PORT ?? 4000);
-  await app.listen(port);
+  const port = Number(process.env.PORT ?? process.env.API_PORT ?? 4000);
+  await app.listen(port, "0.0.0.0");
   // eslint-disable-next-line no-console
-  console.log(`LCS.Dominican API http://localhost:${port}/api`);
+  console.log(`EditD AI API listening on 0.0.0.0:${port}/api`);
 }
 
 bootstrap();

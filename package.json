@@ -11,6 +11,10 @@
   "scripts": {
     "dev": "concurrently -n api,web -c green,cyan \"npm run dev -w @lcs/api\" \"npm run dev -w @lcs/web\"",
     "build": "npm run build -w @lcs/shared && npm run build -w @lcs/api && npm run build -w @lcs/web",
+    "build:web": "npm run build -w @lcs/shared && npm run build -w @lcs/web",
+    "build:api": "npm run build -w @lcs/shared && npm run build -w @lcs/api",
+    "start:web": "npm run start -w @lcs/web",
+    "start:api": "npm run start -w @lcs/api",
     "lint": "npm run lint -w @lcs/web && npm run lint -w @lcs/api",
     "audit:ci": "npm audit --audit-level=high"
   },

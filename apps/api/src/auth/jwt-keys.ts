@@ -32,8 +32,12 @@ export async function loadJwtKeys() {
     publicKeyEncoding: { type: "spki", format: "pem" },
     privateKeyEncoding: { type: "pkcs8", format: "pem" },
   });
-  writeFileSync(privPath, pair.privateKey, { mode: 0o600 });
-  writeFileSync(pubPath, pair.publicKey, { mode: 0o644 });
+  try {
+    writeFileSync(privPath, pair.privateKey, { mode: 0o600 });
+    writeFileSync(pubPath, pair.publicKey, { mode: 0o644 });
+  } catch {
+    // Ephemeral or read-only filesystem fallback
+  }
   privateKey = pair.privateKey;
   publicKey = pair.publicKey;
 }
