@@ -30,7 +30,7 @@ export class AuthService {
 
   private cookieOpts() {
     const isProd = process.env.NODE_ENV === "production";
-    const sameSite = (process.env.COOKIE_SAMESITE as "lax" | "strict" | "none") || (isProd ? "none" : "lax");
+    const sameSite = (process.env.COOKIE_SAMESITE as "lax" | "strict" | "none") || "lax";
     const secure = process.env.COOKIE_SECURE === "true" || isProd || sameSite === "none";
     return {
       httpOnly: true,

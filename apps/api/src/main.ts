@@ -26,9 +26,22 @@ async function bootstrap() {
     }),
   );
   app.use(cookieParser());
-  const webOrigins = process.env.WEB_ORIGIN
-    ? process.env.WEB_ORIGIN.split(",").map((s) => s.trim())
-    : ["http://localhost:3000"];
+  const webOrigins = (process.env.WEB_ORIGIN ?? "http://localhost:3000")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const isAllowedOrigin = (origin: string) => {
+    if (webOrigins.includes("*") || webOrigins.includes(origin)) return true;
+    try {
+      const host = new URL(origin).hostname;
+      if (host === "localhost" || host === "127.0.0.1") return true;
+      if (host.endsWith(".vercel.app")) return true;
+      return false;
+    } catch {
+      return false;
+    }
+  };
 
   app.enableCors({
     origin: (
@@ -36,16 +49,8 @@ async function bootstrap() {
       callback: (err: Error | null, allow?: boolean) => void,
     ) => {
       if (!origin) return callback(null, true);
-      if (
-        webOrigins.includes("*") ||
-        webOrigins.includes(origin) ||
-        origin.endsWith(".vercel.app") ||
-        origin.includes("localhost") ||
-        process.env.NODE_ENV !== "production"
-      ) {
-        return callback(null, true);
-      }
-      return callback(null, true); // Permissive fallback for seamless cloud proxy
+      if (isAllowedOrigin(origin)) return callback(null, true);
+      return callback(new Error("CORS origin denied"), false);
     },
     credentials: true,
   });

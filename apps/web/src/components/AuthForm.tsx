@@ -126,7 +126,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           {pending ? "…" : mode === "login" ? "Iniciar sesión" : "Registrarme"}
         </button>
 
-        {mode === "login" ? (
+        {mode === "login" && process.env.NODE_ENV !== "production" ? (
           <button
             type="button"
             onClick={() => {
@@ -135,7 +135,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             }}
             className="w-full text-center text-xs text-[#2FA84F]/80 hover:text-[#2FA84F] hover:underline pt-1 transition-colors"
           >
-            ⚡ Acceso Rápido Administrador (admin@editd.ai)
+            Acceso rápido administrador (solo desarrollo)
           </button>
         ) : null}
       </form>

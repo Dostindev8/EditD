@@ -1,4 +1,4 @@
-const API = process.env.NEXT_PUBLIC_API_URL ?? "";
+const API = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const isForm = init?.body instanceof FormData;

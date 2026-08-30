@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleDestroy } from "@nestjs/common";
 import { Queue, Worker, type JobsOptions } from "bullmq";
-import IORedis from "ioredis";
+import { Redis } from "ioredis";
 
 type JobHandler = (jobId: string) => Promise<void>;
 
@@ -23,7 +23,7 @@ export class GenerationQueueService implements OnModuleDestroy {
     if (!url || this.queue) return;
 
     try {
-      const connection = new IORedis(url, { maxRetriesPerRequest: null });
+      const connection = new Redis(url, { maxRetriesPerRequest: null });
       this.queue = new Queue("lcs-generation", { connection });
       this.worker = new Worker(
         "lcs-generation",

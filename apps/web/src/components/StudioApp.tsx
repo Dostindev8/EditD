@@ -284,8 +284,13 @@ export default function StudioApp() {
   }
 
   async function logout() {
-    await api("/api/auth/logout", { method: "POST" });
+    try {
+      await api("/api/auth/logout", { method: "POST" });
+    } catch {
+      /* still leave the session locally */
+    }
     router.replace("/login");
+    router.refresh();
   }
 
   if (!user) {
@@ -299,7 +304,7 @@ export default function StudioApp() {
   return (
     <div className="flex min-h-dvh flex-col lg:flex-row bg-[#080E0B]">
       {/* Sidebar Navigation */}
-      <aside className="elevation-card m-3 flex w-auto shrink-0 flex-col gap-4 p-4 lg:m-4 lg:w-72 border border-[#13251C]">
+      <aside className="elevation-card m-3 flex max-h-[min(70dvh,40rem)] w-auto shrink-0 flex-col gap-4 overflow-y-auto p-4 lg:m-4 lg:max-h-none lg:w-72 border border-[#13251C]">
         <div className="flex items-center gap-3">
           <BrandMark size="sm" alt="" />
           <div>
@@ -407,7 +412,7 @@ export default function StudioApp() {
       {/* Main Studio Work Area */}
       <section className="flex min-h-0 min-w-0 flex-1 flex-col px-3 pb-3 lg:px-0 lg:pb-4 lg:pr-4">
         {/* Studio Tabs Navigation */}
-        <div className="my-3 flex flex-wrap items-center gap-1.5 rounded-[14px] bg-[#0C1712] p-1.5 border border-[#13251C] shadow-inner">
+        <div className="my-3 flex flex-wrap items-center gap-1.5 overflow-x-auto rounded-[14px] bg-[#0C1712] p-1.5 border border-[#13251C] shadow-inner">
           {[
             { id: "chat", name: t("💬 Creador & Chat", "💬 Creator & Chat") },
             { id: "generator", name: t("✨ Estudio Generativo", "✨ Generative Studio") },

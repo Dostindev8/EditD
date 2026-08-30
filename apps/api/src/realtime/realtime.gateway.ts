@@ -5,8 +5,23 @@ import type { GenerationSocketEvent } from "../generation/generation.types.js";
 
 @WebSocketGateway({
   cors: {
-    origin: (origin: string, callback: (err: Error | null, allow?: boolean) => void) => {
-      callback(null, true);
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      if (!origin) return callback(null, true);
+      const allowed = (process.env.WEB_ORIGIN ?? "http://localhost:3000")
+        .split(",")
+        .map((s) => s.trim());
+      try {
+        const host = new URL(origin).hostname;
+        const ok =
+          allowed.includes("*") ||
+          allowed.includes(origin) ||
+          host === "localhost" ||
+          host === "127.0.0.1" ||
+          host.endsWith(".vercel.app");
+        return callback(ok ? null : new Error("CORS origin denied"), ok);
+      } catch {
+        return callback(new Error("CORS origin denied"), false);
+      }
     },
     credentials: true,
   },

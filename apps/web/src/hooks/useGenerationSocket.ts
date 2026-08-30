@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "";
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL ?? "";
 
 export type GenerationJobState = {
   jobId: string;
@@ -26,9 +26,9 @@ export function useGenerationSocket({ workspaceId, projectId, onUpdate }: Props)
   const [activeJob, setActiveJob] = useState<GenerationJobState | null>(null);
 
   useEffect(() => {
-    if (!workspaceId || !projectId || !SOCKET_URL) return;
+    if (!workspaceId || !projectId) return;
 
-    const socket = io(SOCKET_URL, {
+    const socket = io(SOCKET_URL || undefined, {
       withCredentials: true,
       transports: ["websocket", "polling"],
     });

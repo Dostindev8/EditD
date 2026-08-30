@@ -33,3 +33,6 @@ Thumbs.db
 uploads/
 tmp/
 temp/
+
+# Hosting CLI
+.vercel

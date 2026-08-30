@@ -13,24 +13,26 @@ const ARGON = {
   parallelism: 1,
 };
 
-const DEFAULT_ADMINS = [
-  {
-    email: "admin@editd.ai",
-    password: "EditDAdmin2026!",
-    name: "editD Master Admin",
-    workspaceName: "editD Master Studio",
-    projectName: "Producción Principal",
-    slug: "editd-master-studio",
-  },
-  {
-    email: "admin@logiccodespot.com",
-    password: "LCSAdmin2026!",
-    name: "Logic Code Spot Admin",
-    workspaceName: "LCS Collaboration Studio",
-    projectName: "Proyectos Audiovisuales",
-    slug: "lcs-collab-studio",
-  },
-];
+function defaultAdmins() {
+  return [
+    {
+      email: (process.env.ADMIN_EMAIL ?? "admin@editd.ai").toLowerCase(),
+      password: process.env.ADMIN_PASSWORD ?? "EditDAdmin2026!",
+      name: process.env.ADMIN_NAME ?? "editD Master Admin",
+      workspaceName: "editD Master Studio",
+      projectName: "Producción Principal",
+      slug: "editd-master-studio",
+    },
+    {
+      email: (process.env.ADMIN_EMAIL_LCS ?? "admin@logiccodespot.com").toLowerCase(),
+      password: process.env.ADMIN_PASSWORD_LCS ?? "LCSAdmin2026!",
+      name: "Logic Code Spot Admin",
+      workspaceName: "LCS Collaboration Studio",
+      projectName: "Proyectos Audiovisuales",
+      slug: "lcs-collab-studio",
+    },
+  ];
+}
 
 @Injectable()
 export class AdminSeedService implements OnModuleInit {
@@ -47,7 +49,7 @@ export class AdminSeedService implements OnModuleInit {
   }
 
   async seedDefaultAdmins() {
-    for (const admin of DEFAULT_ADMINS) {
+    for (const admin of defaultAdmins()) {
       try {
         const existing = await this.users.findOne({ email: admin.email.toLowerCase() });
         if (!existing) {

@@ -2,10 +2,11 @@
   "name": "@lcs/api",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "tsx watch src/main.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "tsx src/main.ts",
+    "start": "node dist/main.js",
     "lint": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
@@ -35,7 +36,8 @@
     "rxjs": "^7.8.2",
     "socket.io": "^4.8.1",
     "bullmq": "^5.56.5",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "typescript": "^5.8.3"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.8",
@@ -43,7 +45,6 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^1.4.12",
     "@types/node": "^22.16.0",
-    "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "tsx": "^4.20.3"
   }
 }

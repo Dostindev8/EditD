@@ -1,4 +1,4 @@
-# LCS.Dominican
+# LCS.Dominican / editD
 
 Plataforma unificada de creación audiovisual con IA (Logic Code Spot).
 
@@ -15,6 +15,20 @@ npm run dev
 - API: http://localhost:4000/api/health
 
 Sin Docker usa Mongo en memoria (dev). Con Docker: `docker compose up -d`.
+
+### Credenciales de administrador (local / seed)
+
+| Email | Contraseña |
+| --- | --- |
+| `admin@editd.ai` | `EditDAdmin2026!` |
+| `admin@logiccodespot.com` | `LCSAdmin2026!` |
+
+Cambia `ADMIN_PASSWORD` en producción.
+
+## Despliegue
+
+- **Frontend (Vercel):** Root Directory = raíz del repo (o `apps/web`). Variable `API_PROXY` = URL del API en Render (sin `/api`). Deja `NEXT_PUBLIC_API_URL` vacío para que las cookies de sesión queden en el mismo origen.
+- **Backend (Render):** Blueprint `render.yaml`. Variables: `WEB_ORIGIN` = URL de Vercel, `MONGODB_URI` (Atlas recomendado). `ALLOW_MEMORY_MONGO=true` permite demo sin Atlas (datos temporales).
 
 ## Plan gratuito (incluido)
 
@@ -41,5 +55,6 @@ Sin Docker usa Mongo en memoria (dev). Con Docker: `docker compose up -d`.
 
 ```bash
 npm run build
+npm run build:api
 npm run audit:ci
 ```

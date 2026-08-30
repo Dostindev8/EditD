@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "buildCommand": "npm run build"
+  "installCommand": "npm install",
+  "buildCommand": "npm run build -w @lcs/shared && npm run build -w @lcs/web"
 }

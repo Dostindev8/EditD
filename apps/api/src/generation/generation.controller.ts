@@ -29,6 +29,7 @@ export class GenerationController {
     @Inject(ModelCatalogService) private catalog: ModelCatalogService,
   ) {}
 
+  @UseGuards(JwtGuard)
   @Get("generation/catalog")
   getCatalog(@Query("modality") modality?: string) {
     if (modality) {
@@ -37,6 +38,7 @@ export class GenerationController {
     return this.catalog.getCatalog();
   }
 
+  @UseGuards(JwtGuard)
   @Post("generation/enhance-prompt")
   enhancePrompt(
     @Body()

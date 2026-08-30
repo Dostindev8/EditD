@@ -4,17 +4,17 @@ services:
     runtime: node
     plan: starter
     region: oregon
-    buildCommand: npm install && npm run build:api
+    buildCommand: npm install --include=dev && npm run build:api
     startCommand: npm run start:api
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: "4000"
       - key: TRUST_PROXY
         value: "true"
+      - key: COOKIE_SAMESITE
+        value: lax
       - key: MONGODB_URI
         sync: false
       - key: WEB_ORIGIN
@@ -23,3 +23,7 @@ services:
         sync: false
       - key: JWT_PUBLIC_KEY
         sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ALLOW_MEMORY_MONGO
+        value: "true"
