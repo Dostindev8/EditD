@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.57.0",
+    "@lcs/shared": "*",
     "@nestjs/common": "^11.1.3",
     "@nestjs/core": "^11.1.3",
     "@nestjs/mongoose": "^11.0.3",
