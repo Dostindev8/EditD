@@ -37,6 +37,10 @@ services:
         sync: false
       - key: REDIS_URL
         sync: false
+      # Free/demo: permitir cola en memoria si aún no hay Redis/Upstash.
+      # Pasar a "false" y definir REDIS_URL en cuanto haya instancia real.
+      - key: ALLOW_MEMORY_QUEUE
+        value: "true"
       - key: SELFHOSTED_INFERENCE_URL
         sync: false
       - key: SELFHOSTED_INFERENCE_TOKEN

@@ -23,12 +23,16 @@ export class GenerationQueueService implements OnModuleDestroy {
     const url = process.env.REDIS_URL?.trim();
 
     if (!url) {
-      if (process.env.NODE_ENV === "production") {
+      if (process.env.NODE_ENV === "production" && process.env.ALLOW_MEMORY_QUEUE !== "true") {
         throw new Error(
-          "REDIS_URL no está definida en producción. La cola en memoria no está permitida.",
+          "REDIS_URL no está definida en producción. Define REDIS_URL o ALLOW_MEMORY_QUEUE=true (solo demos).",
         );
       }
-      this.log.warn("REDIS_URL ausente — usando cola en memoria (solo development/test).");
+      this.log.warn(
+        process.env.NODE_ENV === "production"
+          ? "REDIS_URL ausente + ALLOW_MEMORY_QUEUE=true — cola en memoria (demo; se pierde al reiniciar)."
+          : "REDIS_URL ausente — usando cola en memoria (solo development/test).",
+      );
       return;
     }
 
@@ -48,7 +52,7 @@ export class GenerationQueueService implements OnModuleDestroy {
       });
       this.log.log("BullMQ generation queue ready (concurrency: 2)");
     } catch (e) {
-      if (process.env.NODE_ENV === "production") {
+      if (process.env.NODE_ENV === "production" && process.env.ALLOW_MEMORY_QUEUE !== "true") {
         throw new Error(`BullMQ/Redis no disponible en producción: ${(e as Error).message}`);
       }
       this.log.warn(`BullMQ unavailable, using in-memory queue: ${(e as Error).message}`);

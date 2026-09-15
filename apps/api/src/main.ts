@@ -38,9 +38,16 @@ async function bootstrap() {
   await connectMongo();
 
   if (process.env.NODE_ENV === "production" && !process.env.REDIS_URL?.trim()) {
-    throw new Error(
-      "REDIS_URL es obligatoria en producción. El fallback en memoria solo está permitido en development/test.",
-    );
+    if (process.env.ALLOW_MEMORY_QUEUE === "true") {
+      // Free/demo Render: jobs live only in the process; lost on spin-down/redeploy.
+      console.warn(
+        "[boot] REDIS_URL ausente con ALLOW_MEMORY_QUEUE=true — cola en memoria (no apto para producción real).",
+      );
+    } else {
+      throw new Error(
+        "REDIS_URL es obligatoria en producción. Define REDIS_URL o ALLOW_MEMORY_QUEUE=true (solo demos).",
+      );
+    }
   }
 
   const allowedOrigins = parseAllowedOrigins();
