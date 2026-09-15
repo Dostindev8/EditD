@@ -58,4 +58,26 @@ describe("GovernanceService.evaluateBudget", () => {
     expect(a100.alert).toBe("100");
     expect(a100.allowed).toBe(false);
   });
+
+  it("rejects zero-cost generation when a paid workspace is exhausted", async () => {
+    (billing.workspaceSpendCents as jest.Mock).mockResolvedValue(10000);
+    const result = await service.evaluateBudget({
+      workspaceId: "ws1",
+      estimatedCostCents: 0,
+    });
+    expect(result.allowed).toBe(false);
+    expect(result.freeTier).toBe(true);
+  });
+
+  it("allows zero-cost generation on free-tier workspaces (budget ≤ threshold)", async () => {
+    (workspaces.findById as jest.Mock).mockReturnValue({
+      lean: () => Promise.resolve({ monthlyBudgetCents: 0 }),
+    });
+    (billing.workspaceSpendCents as jest.Mock).mockResolvedValue(0);
+    const result = await service.evaluateBudget({
+      workspaceId: "ws-free",
+      estimatedCostCents: 0,
+    });
+    expect(result.allowed).toBe(true);
+  });
 });

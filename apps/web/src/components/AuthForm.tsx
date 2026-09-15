@@ -125,19 +125,6 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         >
           {pending ? "…" : mode === "login" ? "Iniciar sesión" : "Registrarme"}
         </button>
-
-        {mode === "login" && process.env.NODE_ENV !== "production" ? (
-          <button
-            type="button"
-            onClick={() => {
-              setEmail("admin@editd.ai");
-              setPassword("EditDAdmin2026!");
-            }}
-            className="w-full text-center text-xs text-[#2FA84F]/80 hover:text-[#2FA84F] hover:underline pt-1 transition-colors"
-          >
-            Acceso rápido administrador (solo desarrollo)
-          </button>
-        ) : null}
       </form>
 
       <p className="mt-6 text-center text-sm text-[#E7EFE9]/80 sm:text-left">

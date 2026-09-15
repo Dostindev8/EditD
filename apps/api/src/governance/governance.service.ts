@@ -63,8 +63,14 @@ export class GovernanceService {
     else if (ratio >= 0.9) alert = "90";
     else if (ratio >= 0.7) alert = "70";
 
+    // Zero-cost jobs (self-hosted / mock) must NOT bypass an exhausted paid budget.
+    // Free-tier workspaces (monthlyBudget ≤ threshold) may keep generating at $0.
+    const isFreeTierWorkspace = this.isFreeTierBudget(budget);
     const freeTier = estimate === 0;
-    const allowed = freeTier || spent + estimate <= budget;
+    const allowed =
+      estimate === 0
+        ? isFreeTierWorkspace || spent < budget
+        : spent + estimate <= budget;
 
     let reason: string;
     if (!allowed) {
@@ -75,8 +81,8 @@ export class GovernanceService {
     } else if (freeTier) {
       reason =
         locale === "es"
-          ? "Plan gratuito: puedes explorar opciones de video sin costo."
-          : "Free plan: explore video directions at no cost.";
+          ? "Plan gratuito: generación sin costo marginal (self-hosted / explore)."
+          : "Free plan: zero marginal-cost generation (self-hosted / explore).";
     } else if (alert === "90") {
       reason =
         locale === "es"

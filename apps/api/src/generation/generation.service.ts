@@ -30,6 +30,7 @@ import type {
   VideoGenerationProvider,
 } from "./generation.types.js";
 import type { GenerationRequestPayload } from "@lcs/shared";
+import { assertSafeExternalUrl } from "./url-safety.js";
 
 @Injectable()
 export class GenerationService implements OnModuleInit {
@@ -219,6 +220,17 @@ export class GenerationService implements OnModuleInit {
   ): Promise<{ job: GenerationJobPublic; budget: Awaited<ReturnType<GovernanceService["evaluateBudget"]>> }> {
     await this.isolation.getProjectInWorkspace(userId, input.workspaceId, input.projectId);
 
+    // Fail closed before enqueue — client-supplied media URLs must not SSRF the worker.
+    const safeSource = await assertSafeExternalUrl(input.payload.sourceImageUrl, "sourceImageUrl");
+    const safeEnd = await assertSafeExternalUrl(input.payload.endImageUrl, "endImageUrl");
+    const safeAudio = await assertSafeExternalUrl(input.payload.sourceAudioUrl, "sourceAudioUrl");
+    input.payload = {
+      ...input.payload,
+      sourceImageUrl: safeSource,
+      endImageUrl: safeEnd,
+      sourceAudioUrl: safeAudio,
+    };
+
     const { provider } = await this.resolveProviderForWorkspace({
       workspaceId: input.workspaceId,
       modality: input.payload.modality,
@@ -360,13 +372,34 @@ export class GenerationService implements OnModuleInit {
     }
 
     const snapshot = (doc.optionSnapshot || {}) as unknown as Record<string, unknown>;
+    let safeSource: string | undefined;
+    let safeEnd: string | undefined;
+    let safeAudio: string | undefined;
+    try {
+      safeSource = await assertSafeExternalUrl(
+        snapshot.sourceImageUrl as string | undefined,
+        "sourceImageUrl",
+      );
+      safeEnd = await assertSafeExternalUrl(
+        snapshot.endImageUrl as string | undefined,
+        "endImageUrl",
+      );
+      safeAudio = await assertSafeExternalUrl(
+        snapshot.sourceAudioUrl as string | undefined,
+        "sourceAudioUrl",
+      );
+    } catch (e) {
+      await this.failJob(doc, jobId, wsId, projId, (e as Error).message);
+      return;
+    }
+
     const payload: VideoGenerationPayload = {
       prompt: doc.prompt,
       aspectRatio: String(snapshot.aspectRatio ?? "16:9"),
       durationSec: Number(snapshot.durationSec ?? 10),
-      assetUrl: (snapshot.sourceImageUrl as string) || assetUrl,
-      endImageUrl: snapshot.endImageUrl as string,
-      audioUrl: snapshot.sourceAudioUrl as string,
+      assetUrl: safeSource || assetUrl,
+      endImageUrl: safeEnd,
+      audioUrl: safeAudio,
       modality: snapshot.modality as any,
       modelId: snapshot.modelId as string,
       cameraMotion: snapshot.cameraMotion as any,

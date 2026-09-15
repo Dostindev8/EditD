@@ -1,16 +1,26 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SplashOverlay, shouldPlaySplash } from "./SplashOverlay";
 
 export function SplashGate({ children }: { children: React.ReactNode }) {
   const [show, setShow] = useState(false);
   const [ready, setReady] = useState(false);
   const [fading, setFading] = useState(false);
+  const fadeTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     setShow(shouldPlaySplash());
     setReady(true);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (fadeTimerRef.current != null) {
+        window.clearTimeout(fadeTimerRef.current);
+        fadeTimerRef.current = null;
+      }
+    };
   }, []);
 
   const loadPromise = useMemo(
@@ -23,7 +33,9 @@ export function SplashGate({ children }: { children: React.ReactNode }) {
 
   const onDone = useCallback(() => {
     setFading(true);
-    window.setTimeout(() => {
+    if (fadeTimerRef.current != null) window.clearTimeout(fadeTimerRef.current);
+    fadeTimerRef.current = window.setTimeout(() => {
+      fadeTimerRef.current = null;
       setShow(false);
       setFading(false);
     }, 520);
