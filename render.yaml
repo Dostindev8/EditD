@@ -25,5 +25,23 @@ services:
         sync: false
       - key: ADMIN_EMAIL
         sync: false
+      # El arranque en producción falla si falta cualquiera de estas (ver main.ts,
+      # admin-seed.service.ts y generation.queue.ts). Cargarlas en el dashboard de Render.
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_EMAIL_LCS
+        sync: false
+      - key: ADMIN_PASSWORD_LCS
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: SELFHOSTED_INFERENCE_URL
+        sync: false
+      - key: SELFHOSTED_INFERENCE_TOKEN
+        sync: false
+      # "true" arranca Mongo en memoria si falta MONGODB_URI: los datos se pierden en
+      # cada reinicio. Pasar a "false" en cuanto MONGODB_URI apunte a un clúster real.
       - key: ALLOW_MEMORY_MONGO
         value: "true"

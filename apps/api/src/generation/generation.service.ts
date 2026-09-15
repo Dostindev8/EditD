@@ -17,6 +17,7 @@ import type { VideoOption } from "../creator/creator.types.js";
 import { GenerationJob, GenerationJobDocument } from "./generation-job.schema.js";
 import { GenerationQueueService } from "./generation.queue.js";
 import { DevMockProvider } from "./providers/dev-mock.provider.js";
+import { SelfHostedProvider } from "./providers/selfhosted.provider.js";
 import { RunwayProvider } from "./providers/runway.provider.js";
 import { VeoProvider } from "./providers/veo.provider.js";
 import { MuapiProvider } from "./providers/muapi.provider.js";
@@ -49,11 +50,13 @@ export class GenerationService implements OnModuleInit {
     @Inject(MinimaxProvider) private minimax: MinimaxProvider,
     @Inject(LipSyncProvider) private lipsync: LipSyncProvider,
     @Inject(AudioProvider) private audio: AudioProvider,
+    @Inject(SelfHostedProvider) private selfHosted: SelfHostedProvider,
     @Inject(DevMockProvider) private devMock: DevMockProvider,
   ) {}
 
   onModuleInit() {
     this.providers = [
+      this.selfHosted,
       this.muapi,
       this.minimax,
       this.lipsync,
@@ -89,6 +92,47 @@ export class GenerationService implements OnModuleInit {
     return this.pickProvider(Boolean(hasImage));
   }
 
+  /**
+   * Auditable provider selection: free-tier workspaces → self-hosted (zero marginal $);
+   * paid tiers keep the existing paid-provider chain.
+   */
+  async resolveProviderForWorkspace(input: {
+    workspaceId: string;
+    modality?: string;
+    modelId?: string;
+    hasImage?: boolean;
+  }): Promise<{ provider: VideoGenerationProvider; reason: string; freeTier: boolean }> {
+    const monthlyBudgetCents = await this.governance.getWorkspaceMonthlyBudgetCents(
+      input.workspaceId,
+    );
+    const freeTier = this.governance.isFreeTierBudget(monthlyBudgetCents);
+
+    if (freeTier) {
+      if (this.selfHosted.isConfigured()) {
+        const reason = `free-tier (monthlyBudgetCents=${monthlyBudgetCents} ≤ threshold=${this.governance.freeTierBudgetThresholdCents()})`;
+        this.log.log(`Provider routing: self-hosted (reason=${reason})`);
+        return { provider: this.selfHosted, reason, freeTier: true };
+      }
+      const fallback = this.devMock;
+      const reason = `free-tier without SELFHOSTED_INFERENCE_URL — fallback=${fallback.name}`;
+      this.log.warn(`Provider routing: ${fallback.name} (reason=${reason})`);
+      return { provider: fallback, reason, freeTier: true };
+    }
+
+    const provider = this.pickProviderForModality(
+      input.modality,
+      input.modelId,
+      input.hasImage,
+    );
+    const reason = `paid-tier (monthlyBudgetCents=${monthlyBudgetCents})`;
+    this.log.log(`Provider routing: ${provider.name} (reason=${reason})`);
+    return { provider, reason, freeTier: false };
+  }
+
+  private isZeroMarginalCostProvider(name: string): boolean {
+    return name === "self-hosted" || name === "dev-mock";
+  }
+
   async enqueue(
     userId: string,
     input: {
@@ -101,22 +145,25 @@ export class GenerationService implements OnModuleInit {
   ): Promise<{ job: GenerationJobPublic; budget: Awaited<ReturnType<GovernanceService["evaluateBudget"]>> }> {
     await this.isolation.getProjectInWorkspace(userId, input.workspaceId, input.projectId);
 
-    const costCents = this.governance.estimateGenerationCostCents(
+    const { provider } = await this.resolveProviderForWorkspace({
+      workspaceId: input.workspaceId,
+      hasImage: Boolean(input.assetId),
+    });
+
+    const rawCost = this.governance.estimateGenerationCostCents(
       input.option.durationSec,
       input.option.aspectRatio,
     );
+    const actualEstimate = this.isZeroMarginalCostProvider(provider.name) ? 0 : rawCost;
     const budget = await this.governance.evaluateBudget({
       workspaceId: input.workspaceId,
-      estimatedCostCents: costCents,
+      estimatedCostCents: actualEstimate,
       locale: input.locale,
     });
 
     if (!budget.allowed) {
       throw new ForbiddenException(budget.reason);
     }
-
-    const provider = this.pickProvider(Boolean(input.assetId));
-    const actualEstimate = provider.name === "dev-mock" ? 0 : costCents;
 
     const doc = await this.jobs.create({
       workspaceId: new Types.ObjectId(input.workspaceId),
@@ -172,29 +219,29 @@ export class GenerationService implements OnModuleInit {
   ): Promise<{ job: GenerationJobPublic; budget: Awaited<ReturnType<GovernanceService["evaluateBudget"]>> }> {
     await this.isolation.getProjectInWorkspace(userId, input.workspaceId, input.projectId);
 
+    const { provider } = await this.resolveProviderForWorkspace({
+      workspaceId: input.workspaceId,
+      modality: input.payload.modality,
+      modelId: input.payload.modelId,
+      hasImage: Boolean(input.assetId || input.payload.sourceImageUrl),
+    });
+
     const durationSec = input.payload.durationSec || (input.payload.modality === "image" ? 0 : 10);
-    const costCents = this.governance.estimateGenerationCostCents(
+    const rawCost = this.governance.estimateGenerationCostCents(
       durationSec,
       input.payload.aspectRatio,
     );
+    const actualEstimate = this.isZeroMarginalCostProvider(provider.name) ? 0 : rawCost;
 
     const budget = await this.governance.evaluateBudget({
       workspaceId: input.workspaceId,
-      estimatedCostCents: costCents,
+      estimatedCostCents: actualEstimate,
       locale: input.locale,
     });
 
     if (!budget.allowed) {
       throw new ForbiddenException(budget.reason);
     }
-
-    const provider = this.pickProviderForModality(
-      input.payload.modality,
-      input.payload.modelId,
-      Boolean(input.assetId || input.payload.sourceImageUrl),
-    );
-
-    const actualEstimate = provider.name === "dev-mock" ? 0 : costCents;
 
     const doc = await this.jobs.create({
       workspaceId: new Types.ObjectId(input.workspaceId),

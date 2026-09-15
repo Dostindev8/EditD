@@ -64,147 +64,105 @@ h2,
 
 .auth-stage {
   background: #0c1712;
+  isolation: isolate;
+}
+
+/* Fixed UI compositing layer — never inherits background transforms */
+.auth-stage-ui {
+  position: relative;
+  z-index: 10;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .auth-stage-veil {
+  z-index: 1;
   background:
     radial-gradient(ellipse at 22% 38%, rgba(47, 168, 79, 0.12) 0%, transparent 46%),
     linear-gradient(90deg, rgba(12, 23, 18, 0.42) 0%, rgba(12, 23, 18, 0.62) 48%, rgba(12, 23, 18, 0.78) 100%);
 }
 
 .auth-stage-orbs {
+  z-index: 2;
   background-image:
     radial-gradient(circle at 12% 18%, rgba(199, 205, 209, 0.06) 0 1px, transparent 2px),
     radial-gradient(circle at 80% 70%, rgba(47, 168, 79, 0.07) 0 1px, transparent 2px);
   background-size: 72px 72px, 96px 96px;
 }
 
-/* ── Living cinematic backdrop ── */
+/* ── Living cinematic backdrop (rAF-driven; same photo only) ── */
 .auth-living-bg {
+  z-index: 0;
   background: #0c1712;
+  contain: strict;
+  opacity: 0;
+  transition: opacity 0.55s ease;
+}
+
+.auth-living-bg--ready {
+  opacity: 1;
+}
+
+.auth-living-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  transform: translateZ(0);
 }
 
 .auth-living-plate {
   position: absolute;
-  inset: -8%;
-  width: 116%;
-  height: 116%;
+  inset: -10%;
+  width: 120%;
+  height: 120%;
   will-change: transform;
-  animation: auth-sky-drift 48s ease-in-out infinite alternate;
+  transform: translate3d(0, 0, 0) scale(1.085);
+  transform-origin: 50% 45%;
+  backface-visibility: hidden;
 }
 
-.auth-living-plate--intense {
-  animation-duration: 36s;
+.auth-living-plate--haze {
+  inset: -14%;
+  width: 128%;
+  height: 128%;
+  opacity: 0.34;
+  filter: blur(0.6px) saturate(1.02);
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+  transform: translate3d(0, 0, 0) scale(1.14);
 }
 
 .auth-living-plate--static {
-  animation: none;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  inset: -4%;
+  width: 108%;
+  height: 108%;
+  transform: translate3d(0, 0, 0) scale(1.06) !important;
+  will-change: auto;
+}
+
+.auth-living-plate--haze.auth-living-plate--static {
+  display: none;
 }
 
 .auth-living-img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: 38% 42%;
-  transform: scale(1.08);
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
 }
 
 .auth-living-vignette {
   position: absolute;
   inset: 0;
+  z-index: 1;
+  pointer-events: none;
   background:
     radial-gradient(ellipse at 50% 55%, transparent 20%, rgba(12, 23, 18, 0.45) 100%),
     linear-gradient(180deg, rgba(12, 23, 18, 0.2) 0%, transparent 28%, transparent 72%, rgba(12, 23, 18, 0.35) 100%);
-}
-
-.auth-cloud {
-  position: absolute;
-  inset: -20% -40%;
-  opacity: 0.28;
-  mix-blend-mode: soft-light;
-  pointer-events: none;
-  will-change: transform;
-}
-
-.auth-cloud--a {
-  background:
-    radial-gradient(ellipse 42% 28% at 18% 28%, rgba(230, 236, 240, 0.55) 0%, transparent 70%),
-    radial-gradient(ellipse 36% 22% at 62% 18%, rgba(199, 205, 209, 0.4) 0%, transparent 68%);
-  animation: auth-cloud-a 70s linear infinite;
-}
-
-.auth-cloud--b {
-  opacity: 0.22;
-  background:
-    radial-gradient(ellipse 50% 30% at 78% 36%, rgba(210, 220, 230, 0.5) 0%, transparent 72%),
-    radial-gradient(ellipse 28% 18% at 30% 48%, rgba(180, 200, 210, 0.35) 0%, transparent 70%);
-  animation: auth-cloud-b 95s linear infinite;
-}
-
-.auth-cloud--c {
-  opacity: 0.16;
-  background:
-    radial-gradient(ellipse 60% 24% at 48% 12%, rgba(255, 245, 230, 0.28) 0%, transparent 75%);
-  animation: auth-cloud-c 110s linear infinite;
-}
-
-.auth-mist {
-  position: absolute;
-  inset: 35% -30% 0;
-  opacity: 0.2;
-  background:
-    linear-gradient(180deg, transparent 0%, rgba(199, 205, 209, 0.18) 40%, transparent 85%);
-  filter: blur(18px);
-  animation: auth-mist-drift 80s ease-in-out infinite alternate;
-  mix-blend-mode: soft-light;
-}
-
-@keyframes auth-sky-drift {
-  from {
-    transform: translate3d(-2.5%, -1%, 0) scale(1.02);
-  }
-  to {
-    transform: translate3d(2.5%, 1.2%, 0) scale(1.06);
-  }
-}
-
-@keyframes auth-cloud-a {
-  from {
-    transform: translate3d(-8%, 0, 0);
-  }
-  to {
-    transform: translate3d(14%, -2%, 0);
-  }
-}
-
-@keyframes auth-cloud-b {
-  from {
-    transform: translate3d(10%, 2%, 0);
-  }
-  to {
-    transform: translate3d(-16%, -1%, 0);
-  }
-}
-
-@keyframes auth-cloud-c {
-  from {
-    transform: translate3d(-6%, 1%, 0);
-  }
-  to {
-    transform: translate3d(12%, 3%, 0);
-  }
-}
-
-@keyframes auth-mist-drift {
-  from {
-    transform: translate3d(-4%, 0, 0);
-  }
-  to {
-    transform: translate3d(6%, -2%, 0);
-  }
 }
 
 /* Glass auth card */
@@ -277,12 +235,19 @@ h2,
   .auth-living-img {
     object-position: 45% 40%;
   }
+
+  .auth-living-plate--haze {
+    opacity: 0.22;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .auth-living-plate,
-  .auth-cloud,
-  .auth-mist {
-    animation: none !important;
+  .auth-living-plate {
+    will-change: auto;
+    transform: translate3d(0, 0, 0) scale(1.06) !important;
+  }
+
+  .auth-living-plate--haze {
+    display: none;
   }
 }

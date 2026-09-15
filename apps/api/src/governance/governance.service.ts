@@ -31,6 +31,20 @@ export class GovernanceService {
     return Math.max(50, Math.round(durationSec * base * ratioMultiplier));
   }
 
+  /** Workspaces at or below this monthly budget are treated as free tier. */
+  freeTierBudgetThresholdCents(): number {
+    return Number(process.env.FREE_TIER_BUDGET_CENTS ?? 0);
+  }
+
+  isFreeTierBudget(monthlyBudgetCents: number): boolean {
+    return monthlyBudgetCents <= this.freeTierBudgetThresholdCents();
+  }
+
+  async getWorkspaceMonthlyBudgetCents(workspaceId: string): Promise<number> {
+    const ws = await this.workspaces.findById(workspaceId).lean();
+    return ws?.monthlyBudgetCents ?? 50000;
+  }
+
   async evaluateBudget(input: {
     workspaceId: string;
     estimatedCostCents: number;

@@ -19,12 +19,23 @@ export class GenerationQueueService implements OnModuleDestroy {
   }
 
   private init() {
-    const url = process.env.REDIS_URL;
-    if (!url || this.queue) return;
+    if (this.queue) return;
+    const url = process.env.REDIS_URL?.trim();
+
+    if (!url) {
+      if (process.env.NODE_ENV === "production") {
+        throw new Error(
+          "REDIS_URL no está definida en producción. La cola en memoria no está permitida.",
+        );
+      }
+      this.log.warn("REDIS_URL ausente — usando cola en memoria (solo development/test).");
+      return;
+    }
 
     try {
       const connection = new Redis(url, { maxRetriesPerRequest: null });
       this.queue = new Queue("lcs-generation", { connection });
+      // Concurrency capped at 2 until a dedicated worker process is split out (P1.3).
       this.worker = new Worker(
         "lcs-generation",
         async (job) => {
@@ -35,8 +46,11 @@ export class GenerationQueueService implements OnModuleDestroy {
       this.worker.on("failed", (job, err) => {
         this.log.warn(`BullMQ job ${job?.id} failed: ${err.message}`);
       });
-      this.log.log("BullMQ generation queue ready");
+      this.log.log("BullMQ generation queue ready (concurrency: 2)");
     } catch (e) {
+      if (process.env.NODE_ENV === "production") {
+        throw new Error(`BullMQ/Redis no disponible en producción: ${(e as Error).message}`);
+      }
       this.log.warn(`BullMQ unavailable, using in-memory queue: ${(e as Error).message}`);
       this.queue = null;
     }

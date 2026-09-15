@@ -12,31 +12,67 @@ import { connectMongo } from "./mongo.js";
 config({ path: resolve(process.cwd(), "../../.env") });
 config({ path: resolve(process.cwd(), ".env") });
 
+function parseAllowedOrigins(): string[] {
+  const fromAllowed = (process.env.ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const fromWeb = (process.env.WEB_ORIGIN ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const merged = [...new Set([...fromAllowed, ...fromWeb])];
+  if (merged.length === 0) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "ALLOWED_ORIGINS (o WEB_ORIGIN) debe definir al menos un origen permitido en producción.",
+      );
+    }
+    return ["http://localhost:3000"];
+  }
+  return merged;
+}
+
 async function bootstrap() {
   await loadJwtKeys();
   await connectMongo();
+
+  if (process.env.NODE_ENV === "production" && !process.env.REDIS_URL?.trim()) {
+    throw new Error(
+      "REDIS_URL es obligatoria en producción. El fallback en memoria solo está permitido en development/test.",
+    );
+  }
+
+  const allowedOrigins = parseAllowedOrigins();
   const app = await NestFactory.create(AppModule, { rawBody: true });
   const expressApp = app.getHttpAdapter().getInstance();
   expressApp.set("trust proxy", process.env.TRUST_PROXY !== "false");
 
   app.use(
     helmet({
-      contentSecurityPolicy: false,
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          imgSrc: ["'self'", "data:", "https:"],
+          connectSrc: ["'self'", ...allowedOrigins, "wss:", "ws:"],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          objectSrc: ["'none'"],
+          frameAncestors: ["'none'"],
+        },
+      },
       crossOriginResourcePolicy: { policy: "cross-origin" },
     }),
   );
   app.use(cookieParser());
-  const webOrigins = (process.env.WEB_ORIGIN ?? "http://localhost:3000")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
 
   const isAllowedOrigin = (origin: string) => {
-    if (webOrigins.includes("*") || webOrigins.includes(origin)) return true;
+    if (allowedOrigins.includes("*") || allowedOrigins.includes(origin)) return true;
     try {
       const host = new URL(origin).hostname;
-      if (host === "localhost" || host === "127.0.0.1") return true;
-      if (host.endsWith(".vercel.app")) return true;
+      if (process.env.NODE_ENV !== "production" && (host === "localhost" || host === "127.0.0.1")) {
+        return true;
+      }
       return false;
     } catch {
       return false;
@@ -69,4 +105,8 @@ async function bootstrap() {
   console.log(`EditD AI API listening on 0.0.0.0:${port}/api`);
 }
 
-bootstrap();
+bootstrap().catch((err) => {
+  // eslint-disable-next-line no-console
+  console.error(err instanceof Error ? err.message : err);
+  process.exit(1);
+});

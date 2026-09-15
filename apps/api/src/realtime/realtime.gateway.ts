@@ -7,17 +7,18 @@ import type { GenerationSocketEvent } from "../generation/generation.types.js";
   cors: {
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
       if (!origin) return callback(null, true);
-      const allowed = (process.env.WEB_ORIGIN ?? "http://localhost:3000")
-        .split(",")
-        .map((s) => s.trim());
+      const allowed = [
+        ...(process.env.ALLOWED_ORIGINS ?? "").split(","),
+        ...(process.env.WEB_ORIGIN ?? "http://localhost:3000").split(","),
+      ]
+        .map((s) => s.trim())
+        .filter(Boolean);
       try {
         const host = new URL(origin).hostname;
         const ok =
           allowed.includes("*") ||
           allowed.includes(origin) ||
-          host === "localhost" ||
-          host === "127.0.0.1" ||
-          host.endsWith(".vercel.app");
+          (process.env.NODE_ENV !== "production" && (host === "localhost" || host === "127.0.0.1"));
         return callback(ok ? null : new Error("CORS origin denied"), ok);
       } catch {
         return callback(new Error("CORS origin denied"), false);

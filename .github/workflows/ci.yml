@@ -16,3 +16,5 @@ jobs:
       - name: Block high/critical advisories
         run: npm audit --audit-level=high
       - run: npm run build:all
+      - name: Unit tests (API)
+        run: npm run test

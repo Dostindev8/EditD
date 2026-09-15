@@ -7,6 +7,7 @@ export type GenerationProviderName =
   | "minimax"
   | "lipsync"
   | "audio"
+  | "self-hosted"
   | "dev-mock";
 
 export type VideoGenerationPayload = {

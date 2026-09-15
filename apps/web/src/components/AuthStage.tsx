@@ -9,7 +9,7 @@ export function AuthStage({ children }: { children: React.ReactNode }) {
       <div className="auth-stage-veil pointer-events-none absolute inset-0" />
       <div className="auth-stage-orbs pointer-events-none absolute inset-0" aria-hidden />
 
-      <div className="relative z-10 mx-auto grid min-h-dvh w-full max-w-6xl lg:grid-cols-2">
+      <div className="auth-stage-ui mx-auto grid min-h-dvh w-full max-w-6xl lg:grid-cols-2">
         <aside className="hidden flex-col items-center justify-center px-8 py-16 lg:flex xl:px-12">
           <BrandMark size="hero" />
           <p className="brand-serif mt-8 text-center text-3xl tracking-[0.12em] text-[#2FA84F]">editD</p>

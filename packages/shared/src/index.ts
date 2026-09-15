@@ -211,6 +211,21 @@ export const GENERATIVE_MODELS_CATALOG: GenerativeModel[] = [
 
   // ── Video Models ──
   {
+    id: "self-hosted-comfy",
+    name: "Self-hosted (ComfyUI)",
+    provider: "LCS Self-hosted",
+    modality: "video",
+    description:
+      "Zero marginal cost per call via your GPU/ComfyUI server. Used automatically for free-tier workspaces.",
+    endpoint: "self-hosted",
+    aspectRatios: ["16:9", "9:16", "1:1"],
+    supportsImageToVideo: true,
+    supportsCameraMotion: false,
+    maxDurationSec: 10,
+    resolutions: ["1280x720", "1920x1080"],
+    defaultResolution: "1280x720",
+  },
+  {
     id: "minimax-hailuo",
     name: "Minimax Hailuo Video (H3)",
     provider: "Minimax",

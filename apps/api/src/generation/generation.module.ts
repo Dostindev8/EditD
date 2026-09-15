@@ -14,6 +14,7 @@ import { MinimaxProvider } from "./providers/minimax.provider.js";
 import { LipSyncProvider } from "./providers/lipsync.provider.js";
 import { AudioProvider } from "./providers/audio.provider.js";
 import { DevMockProvider } from "./providers/dev-mock.provider.js";
+import { SelfHostedProvider } from "./providers/selfhosted.provider.js";
 import { PromptEnhancerService } from "./services/prompt-enhancer.service.js";
 import { ModelCatalogService } from "./services/model-catalog.service.js";
 
@@ -36,6 +37,7 @@ import { ModelCatalogService } from "./services/model-catalog.service.js";
     AudioProvider,
     RunwayProvider,
     VeoProvider,
+    SelfHostedProvider,
     DevMockProvider,
   ],
   exports: [GenerationService, PromptEnhancerService, ModelCatalogService],
