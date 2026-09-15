@@ -6,7 +6,9 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@lcs/shared"],
   serverExternalPackages: ["sharp"],
   async rewrites() {
-    const fallback = process.env.VERCEL ? "https://editd-api.onrender.com" : "http://localhost:4000";
+    const fallback = process.env.VERCEL
+      ? "https://editd-a0u0.onrender.com"
+      : "http://localhost:4000";
     const api = (process.env.API_PROXY || process.env.NEXT_PUBLIC_API_URL || fallback).replace(/\/api\/?$/, "");
     return [
       { source: "/api/:path*", destination: `${api}/api/:path*` },
