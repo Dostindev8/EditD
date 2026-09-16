@@ -1,13 +1,11 @@
-# Checklist de rotación de secretos (Render / producción)
+# Checklist de rotación de secretos (producción)
 
-Ejecutar **manualmente** en el dashboard de Render (o el host del API). Este documento no
-rota secretos por sí solo.
+Ejecutar **manualmente** en el panel del host del API. Este documento no rota secretos por sí solo y **no** debe contener contraseñas reales.
 
 ## Antes de rotar
 
-- [ ] Tener acceso al panel de Render del servicio `editd-api`.
-- [ ] Tener acceso a Vercel (proyecto web) para actualizar `ALLOWED_ORIGINS` / `API_PROXY` si cambian URLs.
-- [ ] Ventana de mantenimiento acordada (los usuarios deberán volver a iniciar sesión).
+- [ ] Acceso al panel del servicio API y del frontend.
+- [ ] Ventana de mantenimiento (los usuarios deberán volver a iniciar sesión).
 
 ## Rotación
 
@@ -16,23 +14,15 @@ rota secretos por sí solo.
   openssl rand -base64 24
   openssl rand -base64 24
   ```
-- [ ] En Render → Environment: actualizar `ADMIN_PASSWORD` y `ADMIN_PASSWORD_LCS` con esos valores.
-- [ ] Confirmar `JWT_PRIVATE_KEY` y `JWT_PUBLIC_KEY` fijadas como secretos persistentes (PEM RS256, no vacías).
-  Si no existen, generar un par nuevo y fijarlo; **no** dejar que el API genere claves efímeras.
-- [ ] Confirmar `REDIS_URL` apunta a una instancia real y persistente (Upstash / Redis Cloud / Redis en Render).
-- [ ] Confirmar `ALLOWED_ORIGINS` (CSV) incluye solo los dominios reales de producción y staging, por ejemplo:
-  `https://web-dostindevs-projects.vercel.app,https://web-ten-kappa-1umwjs6wcs.vercel.app`
-- [ ] Redeploy del servicio API.
+- [ ] Actualizar `ADMIN_PASSWORD` y `ADMIN_PASSWORD_LCS` en el environment del host.
+- [ ] Confirmar `JWT_PRIVATE_KEY` / `JWT_PUBLIC_KEY` persistentes (PEM RS256).
+- [ ] Confirmar `REDIS_URL` (o demos explícitas con cola en memoria).
+- [ ] Confirmar `ALLOWED_ORIGINS` solo con dominios reales de producción/staging (sin pegarlos en git).
+- [ ] Redeploy del API.
 
 ## Tras la rotación
 
-- [ ] Forzar cierre de sesión global: incrementar `tokenVersion` de todos los usuarios **o**
-      vaciar / marcar `revoked: true` en la colección de refresh sessions.
-- [ ] Verificar login con las nuevas credenciales admin.
-- [ ] Verificar que login con `EditDAdmin2026!` / `LCSAdmin2026!` **falla**.
+- [ ] Invalidar refresh sessions / incrementar `tokenVersion`.
+- [ ] Verificar login con las **nuevas** credenciales (fuera de este repo).
+- [ ] Verificar que las contraseñas antiguas filtradas **fallan**.
 - [ ] Smoke: `GET /api/health` → 200.
-
-## Nota
-
-Las contraseñas antiguas que vivieron en git (`.env.example`) están documentadas como
-comprometidas en `SECURITY.md`.

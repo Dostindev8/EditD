@@ -16,19 +16,16 @@ npm run dev
 
 Sin Docker usa Mongo en memoria (dev). Con Docker: `docker compose up -d`.
 
-### Credenciales de administrador (local / seed)
+### Administradores (seed local)
 
-| Email | Contraseña |
-| --- | --- |
-| `admin@editd.ai` | `EditDAdmin2026!` |
-| `admin@logiccodespot.com` | `LCSAdmin2026!` |
+Define `ADMIN_EMAIL` / `ADMIN_PASSWORD` (y variantes `_LCS`) **solo** en `.env` local o en el panel del host. Nunca documentes contraseñas reales en este README ni en commits.
 
-Cambia `ADMIN_PASSWORD` en producción.
+Plantilla: ver `.env.example` (`changeme-…`).
 
 ## Despliegue
 
-- **Frontend (Vercel):** Root Directory = raíz del repo (o `apps/web`). Variable `API_PROXY` = URL del API en Render (sin `/api`). Deja `NEXT_PUBLIC_API_URL` vacío para que las cookies de sesión queden en el mismo origen.
-- **Backend (Render):** Blueprint `render.yaml`. Variables: `WEB_ORIGIN` = URL de Vercel, `MONGODB_URI` (Atlas recomendado). `ALLOW_MEMORY_MONGO=true` permite demo sin Atlas (datos temporales).
+- **Frontend (Vercel):** Root Directory = raíz del repo (o `apps/web`). `API_PROXY` = URL del API (sin `/api`). Deja `NEXT_PUBLIC_API_URL` vacío para cookies same-origin.
+- **Backend (Render u otro):** Blueprint `render.yaml` si aplica. Configura `WEB_ORIGIN`, `MONGODB_URI` (o `ALLOW_MEMORY_MONGO=true` solo para demos temporales) y secretos JWT/admin **en el panel del host**, no en git.
 
 ## Plan gratuito (incluido)
 
@@ -40,16 +37,16 @@ Cambia `ADMIN_PASSWORD` en producción.
 ## Fases
 
 - **Fase 0 + Creator free:** auth, splash, chat, upload, opciones de video
-- **Fase 1:** generación Runway/Veo + gobierno de presupuesto bloqueante + Socket.io + webhooks HMAC
+- **Fase 1:** generación + gobierno de presupuesto + Socket.io + webhooks HMAC
 - **Fase 2:** editor de video timeline + export
 
 ### Fase 1 — flujo
 
 1. Elige una dirección de video (gratis)
 2. Pulsa **Generar video** — gobierno valida presupuesto antes de encolar
-3. Progreso en tiempo real vía Socket.io (`job:encolado`, `job:progress`, `job:completed`)
-4. Sin API keys usa `dev-mock` (video demo). Con `RUNWAY_API_KEY` / `GOOGLE_VEO_API_KEY` usa proveedor real
-5. Webhooks: `POST /api/generation/webhooks/runway|veo` (HMAC en `WEBHOOK_HMAC_SECRET`)
+3. Progreso en tiempo real vía Socket.io
+4. Sin API keys de pago usa cadena free-cloud / self-hosted / mock
+5. Webhooks HMAC vía `WEBHOOK_HMAC_SECRET` (solo en secretos del host)
 
 ## Verificación
 
