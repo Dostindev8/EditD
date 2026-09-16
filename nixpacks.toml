@@ -1,0 +1,14 @@
+# Force Nest API — never auto-detect Next.js from the monorepo.
+providers = []
+
+[phases.setup]
+nixPkgs = ["nodejs_22", "python3", "gcc"]
+
+[phases.install]
+cmds = ["npm ci --include=dev"]
+
+[phases.build]
+cmds = ["npm run build:api"]
+
+[start]
+cmd = "npm run start:api"

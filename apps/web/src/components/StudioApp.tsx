@@ -304,7 +304,7 @@ export default function StudioApp() {
   return (
     <div className="flex min-h-dvh flex-col lg:flex-row bg-[#080E0B]">
       {/* Sidebar Navigation */}
-      <aside className="elevation-card m-3 flex max-h-[min(70dvh,40rem)] w-auto shrink-0 flex-col gap-4 overflow-y-auto p-4 lg:m-4 lg:max-h-none lg:w-72 border border-[#13251C]">
+      <aside className="elevation-card m-2 flex max-h-[min(42dvh,22rem)] w-auto shrink-0 flex-col gap-3 overflow-y-auto p-3 sm:m-3 sm:max-h-[min(55dvh,32rem)] sm:gap-4 sm:p-4 lg:m-4 lg:max-h-none lg:w-72 border border-[#13251C]">
         <div className="flex items-center gap-3">
           <BrandMark size="sm" alt="" />
           <div>
@@ -412,21 +412,21 @@ export default function StudioApp() {
       {/* Main Studio Work Area */}
       <section className="flex min-h-0 min-w-0 flex-1 flex-col px-3 pb-3 lg:px-0 lg:pb-4 lg:pr-4">
         {/* Studio Tabs Navigation */}
-        <div className="my-3 flex flex-wrap items-center gap-1.5 overflow-x-auto rounded-[14px] bg-[#0C1712] p-1.5 border border-[#13251C] shadow-inner">
+        <div className="my-2 sm:my-3 flex flex-nowrap sm:flex-wrap items-center gap-1.5 overflow-x-auto overscroll-x-contain rounded-[14px] bg-[#0C1712] p-1.5 border border-[#13251C] shadow-inner [-webkit-overflow-scrolling:touch]">
           {[
-            { id: "chat", name: t("💬 Creador & Chat", "💬 Creator & Chat") },
-            { id: "generator", name: t("✨ Estudio Generativo", "✨ Generative Studio") },
-            { id: "cinema", name: t("🎬 Cinema Director", "🎬 Cinema Director") },
-            { id: "lipsync", name: t("🗣️ LipSync & Audio", "🗣️ LipSync & Audio") },
-            { id: "workflow", name: t("⚡ Visual Workflows", "⚡ Visual Workflows") },
-            { id: "prompts", name: t("🎯 Prompt Director", "🎯 Prompt Director") },
-            { id: "video", name: t("🎞️ Editor de Video", "🎞️ Video Editor") },
+            { id: "chat", name: t("💬 Creador", "💬 Creator") },
+            { id: "generator", name: t("✨ Generativo", "✨ Generative") },
+            { id: "cinema", name: t("🎬 Cinema", "🎬 Cinema") },
+            { id: "lipsync", name: t("🗣️ LipSync", "🗣️ LipSync") },
+            { id: "workflow", name: t("⚡ Workflows", "⚡ Workflows") },
+            { id: "prompts", name: t("🎯 Prompts", "🎯 Prompts") },
+            { id: "video", name: t("🎞️ Editor", "🎞️ Editor") },
           ].map((tab) => (
             <button
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id as StudioTab)}
-              className={`rounded-[10px] px-3 py-1.5 text-xs font-semibold tracking-wide transition-all ${
+              className={`shrink-0 rounded-[10px] px-2.5 py-1.5 text-[11px] sm:px-3 sm:text-xs font-semibold tracking-wide transition-all ${
                 activeTab === tab.id
                   ? "bg-[#2FA84F] text-[#0C1712] shadow-sm shadow-[#2FA84F]/30"
                   : "text-[#C7CDD1]/70 hover:text-[#E7EFE9] hover:bg-[#13251C]/60"

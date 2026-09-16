@@ -1,11 +1,11 @@
 services:
   - type: web
     name: editd-api
-    runtime: node
-    plan: starter
+    runtime: docker
+    plan: free
     region: oregon
-    buildCommand: npm install --include=dev && npm run build:api
-    startCommand: npm run start:api
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
@@ -15,9 +15,19 @@ services:
         value: "true"
       - key: COOKIE_SAMESITE
         value: lax
+      - key: ALLOW_MEMORY_QUEUE
+        value: "true"
+      # Demo durable-enough until Atlas password is real: in-memory Mongo.
+      # Set MONGODB_URI to a working Atlas URI and flip this to "false".
+      - key: ALLOW_MEMORY_MONGO
+        value: "true"
       - key: MONGODB_URI
         sync: false
       - key: WEB_ORIGIN
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: API_PUBLIC_URL
         sync: false
       - key: JWT_PRIVATE_KEY
         sync: false
@@ -25,27 +35,17 @@ services:
         sync: false
       - key: ADMIN_EMAIL
         sync: false
-      # El arranque en producción falla si falta cualquiera de estas (ver main.ts,
-      # admin-seed.service.ts y generation.queue.ts). Cargarlas en el dashboard de Render.
       - key: ADMIN_PASSWORD
         sync: false
       - key: ADMIN_EMAIL_LCS
         sync: false
       - key: ADMIN_PASSWORD_LCS
         sync: false
-      - key: ALLOWED_ORIGINS
-        sync: false
       - key: REDIS_URL
         sync: false
-      # Free/demo: permitir cola en memoria si aún no hay Redis/Upstash.
-      # Pasar a "false" y definir REDIS_URL en cuanto haya instancia real.
-      - key: ALLOW_MEMORY_QUEUE
-        value: "true"
+      - key: WEBHOOK_HMAC_SECRET
+        sync: false
       - key: SELFHOSTED_INFERENCE_URL
         sync: false
       - key: SELFHOSTED_INFERENCE_TOKEN
         sync: false
-      # "true" arranca Mongo en memoria si falta MONGODB_URI: los datos se pierden en
-      # cada reinicio. Pasar a "false" en cuanto MONGODB_URI apunte a un clúster real.
-      - key: ALLOW_MEMORY_MONGO
-        value: "true"

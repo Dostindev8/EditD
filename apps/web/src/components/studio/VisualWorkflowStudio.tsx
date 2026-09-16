@@ -93,7 +93,7 @@ export function VisualWorkflowStudio({ locale }: VisualWorkflowStudioProps) {
       </div>
 
       {/* Visual Canvas Area */}
-      <div className="relative overflow-x-auto rounded-[20px] border border-[#13251C] bg-[#0C1712]/90 p-8 backdrop-blur-xl min-h-[440px]">
+      <div className="relative overflow-x-auto rounded-[20px] border border-[#13251C] bg-[#0C1712]/90 p-4 sm:p-6 md:p-8 backdrop-blur-xl min-h-[280px] sm:min-h-[360px] md:min-h-[440px] -mx-1 sm:mx-0">
         {/* Grid dots background pattern */}
         <div
           className="pointer-events-none absolute inset-0 opacity-15"
@@ -103,18 +103,18 @@ export function VisualWorkflowStudio({ locale }: VisualWorkflowStudioProps) {
           }}
         />
 
-        {/* Nodes Grid */}
-        <div className="relative z-10 flex flex-wrap lg:flex-nowrap items-center gap-6 min-w-[900px]">
+        {/* Nodes: wrap on mobile; horizontal scroll only when needed */}
+        <div className="relative z-10 flex flex-col sm:flex-row sm:flex-wrap xl:flex-nowrap items-stretch sm:items-center gap-4 sm:gap-6 w-full sm:min-w-0 xl:min-w-[900px]">
           {nodes.map((node, index) => {
             const isSelected = activeNode?.id === node.id;
             const isProcessing = progressStep === index;
             const isDone = progressStep !== null && progressStep > index;
 
             return (
-              <div key={node.id} className="flex items-center gap-4">
+              <div key={node.id} className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
                 <div
                   onClick={() => setActiveNode(node)}
-                  className={`w-56 cursor-pointer rounded-[16px] border p-4 transition-all ${
+                  className={`w-full sm:w-56 cursor-pointer rounded-[16px] border p-4 transition-all ${
                     isProcessing
                       ? "border-[#2FA84F] bg-[#13251C] ring-2 ring-[#2FA84F] shadow-lg shadow-[#2FA84F]/30 animate-pulse"
                       : isDone
@@ -142,7 +142,9 @@ export function VisualWorkflowStudio({ locale }: VisualWorkflowStudioProps) {
                 </div>
 
                 {index < nodes.length - 1 ? (
-                  <div className="text-[#2FA84F] font-bold text-lg">➔</div>
+                  <div className="text-[#2FA84F] font-bold text-lg rotate-90 sm:rotate-0" aria-hidden>
+                    ➔
+                  </div>
                 ) : null}
               </div>
             );

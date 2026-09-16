@@ -14,7 +14,7 @@
     "build:all": "npm run build -w @lcs/shared && npm run build -w @lcs/api && npm run build -w @lcs/web",
     "build:web": "npm run build -w @lcs/shared && npm run build -w @lcs/web",
     "build:api": "npm run build -w @lcs/shared && npm run build -w @lcs/api",
-    "start": "npm run start -w @lcs/web",
+    "start": "npm run start:api",
     "start:web": "npm run start -w @lcs/web",
     "start:api": "npm run start -w @lcs/api",
     "test": "npm run test -w @lcs/api",
