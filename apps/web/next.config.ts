@@ -9,7 +9,9 @@ const nextConfig: NextConfig = {
     const fallback = process.env.VERCEL
       ? "https://editd-a0u0.onrender.com"
       : "http://localhost:4000";
-    const api = (process.env.API_PROXY || process.env.NEXT_PUBLIC_API_URL || fallback).replace(/\/api\/?$/, "");
+    const raw = (process.env.API_PROXY || process.env.NEXT_PUBLIC_API_URL || "").trim();
+    // Empty/whitespace env must not become destination "/api/..." (self-loop → 404).
+    const api = (raw || fallback).replace(/\/$/, "").replace(/\/api$/i, "");
     return [
       { source: "/api/:path*", destination: `${api}/api/:path*` },
       { source: "/socket.io/:path*", destination: `${api}/socket.io/:path*` },

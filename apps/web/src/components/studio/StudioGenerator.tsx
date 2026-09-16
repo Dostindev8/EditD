@@ -39,6 +39,7 @@ export function StudioGenerator({
   const [durationSec, setDurationSec] = useState(10);
   const [sourceImageUrl, setSourceImageUrl] = useState("");
   const [quality, setQuality] = useState<"standard" | "hd" | "4k">("hd");
+  const [batchCount, setBatchCount] = useState(1);
   const [steps, setSteps] = useState(30);
   const [cfgScale, setCfgScale] = useState(7.5);
   const [seed, setSeed] = useState<number | undefined>(undefined);
@@ -81,34 +82,39 @@ export function StudioGenerator({
     if (!prompt.trim() || !workspaceId || !projectId) return;
     setGenerating(true);
     try {
-      const payload: GenerationRequestPayload = {
-        modality,
-        modelId: selectedModel.id,
-        prompt,
-        negativePrompt: negativePrompt.trim() || undefined,
-        aspectRatio,
-        durationSec: modality === "image" ? undefined : durationSec,
-        sourceImageUrl: sourceImageUrl.trim() || undefined,
-        quality,
-        steps,
-        cfgScale,
-        seed,
-      };
+      const count = Math.min(4, Math.max(1, batchCount));
+      let lastJob: any = null;
+      for (let i = 0; i < count; i++) {
+        const payload: GenerationRequestPayload = {
+          modality,
+          modelId: selectedModel.id,
+          prompt,
+          negativePrompt: negativePrompt.trim() || undefined,
+          aspectRatio,
+          durationSec: modality === "image" ? undefined : durationSec,
+          sourceImageUrl: sourceImageUrl.trim() || undefined,
+          quality,
+          steps,
+          cfgScale,
+          seed: seed != null ? seed + i : undefined,
+          numOutputs: 1,
+        };
 
-      const res = await api<{ job: any }>(
-        `/api/workspaces/${workspaceId}/projects/${projectId}/generation/direct`,
-        {
-          method: "POST",
-          body: JSON.stringify({ payload, locale }),
-        },
-      );
+        const res = await api<{ job: any }>(
+          `/api/workspaces/${workspaceId}/projects/${projectId}/generation/direct`,
+          {
+            method: "POST",
+            body: JSON.stringify({ payload, locale }),
+          },
+        );
 
-      if (res?.job) {
-        onJobStarted(res.job);
-        if (res.job.outputUrl) {
-          setResultUrl(res.job.outputUrl);
+        if (res?.job) {
+          onJobStarted(res.job);
+          lastJob = res.job;
+          if (res.job.outputUrl) setResultUrl(res.job.outputUrl);
         }
       }
+      if (lastJob?.outputUrl) setResultUrl(lastJob.outputUrl);
     } catch (err: any) {
       alert(err.message || "Error al iniciar la generación");
     } finally {
@@ -304,6 +310,22 @@ export function StudioGenerator({
 
               <div>
                 <label className="block text-[11px] text-[#C7CDD1]/70 mb-1">
+                  {t("Cantidad (batch)", "Batch count")} ({batchCount})
+                </label>
+                <select
+                  value={batchCount}
+                  onChange={(e) => setBatchCount(Number(e.target.value))}
+                  className="w-full rounded-[8px] border border-[#13251C] bg-[#0C1712] p-2 text-xs text-[#E7EFE9]"
+                >
+                  <option value={1}>1</option>
+                  <option value={2}>2</option>
+                  <option value={3}>3</option>
+                  <option value={4}>4</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] text-[#C7CDD1]/70 mb-1">
                   {t("Pasos (Steps)", "Steps")} ({steps})
                 </label>
                 <input
@@ -371,18 +393,21 @@ export function StudioGenerator({
 
             <div className="my-auto flex flex-col items-center justify-center p-6 text-center">
               {resultUrl ? (
-                modality === "video" || resultUrl.endsWith(".mp4") ? (
+                /image\.pollinations\.ai/i.test(resultUrl) ||
+                /\.(avif|gif|jpe?g|png|webp)(\?|$)/i.test(resultUrl) ||
+                modality === "image" ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={resultUrl}
+                    alt="Generated output"
+                    className="max-h-[340px] w-full rounded-[12px] object-contain shadow-2xl border border-[#2FA84F]/30"
+                  />
+                ) : (
                   <video
                     src={resultUrl}
                     controls
                     autoPlay
                     loop
-                    className="max-h-[340px] w-full rounded-[12px] object-contain shadow-2xl border border-[#2FA84F]/30"
-                  />
-                ) : (
-                  <img
-                    src={resultUrl}
-                    alt="Generated output"
                     className="max-h-[340px] w-full rounded-[12px] object-contain shadow-2xl border border-[#2FA84F]/30"
                   />
                 )

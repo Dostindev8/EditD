@@ -2,5 +2,15 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "cd ../.. && npm install",
-  "buildCommand": "cd ../.. && npm run build -w @lcs/shared && npm run build -w @lcs/web"
+  "buildCommand": "cd ../.. && npm run build -w @lcs/shared && npm run build -w @lcs/web",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://editd-a0u0.onrender.com/api/:path*"
+    },
+    {
+      "source": "/socket.io/:path*",
+      "destination": "https://editd-a0u0.onrender.com/socket.io/:path*"
+    }
+  ]
 }

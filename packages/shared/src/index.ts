@@ -152,6 +152,43 @@ export interface VisualWorkflow {
 }
 
 export const GENERATIVE_MODELS_CATALOG: GenerativeModel[] = [
+  // ── Free / local-first (default without paid keys) ──
+  {
+    id: "flux-pollinations-free",
+    name: "FLUX Free (Pollinations)",
+    provider: "Pollinations · free-cloud",
+    modality: "image",
+    description:
+      "Imágenes gratis vía FLUX en la nube (sin API key). Ideal para alto volumen en demo/producción low-cost.",
+    endpoint: "free-cloud-flux",
+    aspectRatios: ["1:1", "16:9", "9:16", "21:9", "4:5", "3:4", "4:3", "3:2", "2:3"],
+    resolutions: ["1024x1024", "1280x720", "720x1280", "1536x640"],
+    defaultResolution: "1024x1024",
+  },
+  {
+    id: "flux-schnell-free",
+    name: "FLUX Turbo Free",
+    provider: "Pollinations · free-cloud",
+    modality: "image",
+    description: "Variante rápida gratis (turbo) para iterar muchas ideas en segundos.",
+    endpoint: "free-cloud-turbo",
+    aspectRatios: ["1:1", "16:9", "9:16", "4:5", "3:4", "4:3"],
+    resolutions: ["1024x1024", "1280x720", "720x1280"],
+    defaultResolution: "1024x1024",
+  },
+  {
+    id: "self-hosted-comfy-image",
+    name: "Self-hosted ComfyUI (Image)",
+    provider: "LCS Self-hosted",
+    modality: "image",
+    description:
+      "Modelos locales en tu GPU/ComfyUI (SELFHOSTED_INFERENCE_URL). Costo marginal $0 con el nodo encendido.",
+    endpoint: "self-hosted",
+    aspectRatios: ["1:1", "16:9", "9:16", "21:9", "4:5"],
+    resolutions: ["1024x1024", "1280x720", "1920x1080"],
+    defaultResolution: "1024x1024",
+  },
+
   // ── Image Models ──
   {
     id: "flux-dev",
@@ -216,9 +253,24 @@ export const GENERATIVE_MODELS_CATALOG: GenerativeModel[] = [
     provider: "LCS Self-hosted",
     modality: "video",
     description:
-      "Zero marginal cost per call via your GPU/ComfyUI server. Used automatically for free-tier workspaces.",
+      "Zero marginal cost per call via your GPU/ComfyUI server. Preferred when SELFHOSTED_INFERENCE_URL is set.",
     endpoint: "self-hosted",
     aspectRatios: ["16:9", "9:16", "1:1"],
+    supportsImageToVideo: true,
+    supportsCameraMotion: false,
+    maxDurationSec: 10,
+    resolutions: ["1280x720", "1920x1080"],
+    defaultResolution: "1280x720",
+  },
+  {
+    id: "cinematic-keyframe-free",
+    name: "Cinematic Keyframe Free",
+    provider: "Pollinations · free-cloud",
+    modality: "video",
+    description:
+      "Keyframe cinematográfico HD gratis (FLUX). Para video motion completo conecta ComfyUI local o una API de pago.",
+    endpoint: "free-cloud-keyframe",
+    aspectRatios: ["16:9", "9:16", "1:1", "21:9"],
     supportsImageToVideo: true,
     supportsCameraMotion: false,
     maxDurationSec: 10,

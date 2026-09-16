@@ -8,6 +8,7 @@ export type GenerationProviderName =
   | "lipsync"
   | "audio"
   | "self-hosted"
+  | "free-cloud"
   | "dev-mock";
 
 export type VideoGenerationPayload = {

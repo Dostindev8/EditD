@@ -18,6 +18,7 @@ import { GenerationJob, GenerationJobDocument } from "./generation-job.schema.js
 import { GenerationQueueService } from "./generation.queue.js";
 import { DevMockProvider } from "./providers/dev-mock.provider.js";
 import { SelfHostedProvider } from "./providers/selfhosted.provider.js";
+import { FreeCloudProvider } from "./providers/free-cloud.provider.js";
 import { RunwayProvider } from "./providers/runway.provider.js";
 import { VeoProvider } from "./providers/veo.provider.js";
 import { MuapiProvider } from "./providers/muapi.provider.js";
@@ -52,12 +53,14 @@ export class GenerationService implements OnModuleInit {
     @Inject(LipSyncProvider) private lipsync: LipSyncProvider,
     @Inject(AudioProvider) private audio: AudioProvider,
     @Inject(SelfHostedProvider) private selfHosted: SelfHostedProvider,
+    @Inject(FreeCloudProvider) private freeCloud: FreeCloudProvider,
     @Inject(DevMockProvider) private devMock: DevMockProvider,
   ) {}
 
   onModuleInit() {
     this.providers = [
       this.selfHosted,
+      this.freeCloud,
       this.muapi,
       this.minimax,
       this.lipsync,
@@ -69,12 +72,19 @@ export class GenerationService implements OnModuleInit {
     this.queue.registerHandler((jobId) => this.processJob(jobId));
   }
 
+  /** Zero-marginal chain: local GPU → free cloud (Pollinations) → deterministic mock. */
+  private pickZeroCostProvider(): VideoGenerationProvider {
+    if (this.selfHosted.isConfigured()) return this.selfHosted;
+    if (this.freeCloud.isConfigured()) return this.freeCloud;
+    return this.devMock;
+  }
+
   pickProvider(hasImage: boolean): VideoGenerationProvider {
     if (this.minimax.isConfigured()) return this.minimax;
     if (this.muapi.isConfigured()) return this.muapi;
     if (hasImage && this.runway.isConfigured()) return this.runway;
     if (this.veo.isConfigured()) return this.veo;
-    return this.devMock;
+    return this.pickZeroCostProvider();
   }
 
   pickProviderForModality(
@@ -82,20 +92,34 @@ export class GenerationService implements OnModuleInit {
     modelId?: string,
     hasImage?: boolean,
   ): VideoGenerationProvider {
-    if (modality === "lipsync") return this.lipsync;
-    if (modality === "audio") return this.audio;
-    if (modelId?.includes("minimax")) {
-      return this.minimax.isConfigured() ? this.minimax : this.muapi;
+    if (modality === "lipsync") {
+      return this.lipsync.isConfigured() ? this.lipsync : this.pickZeroCostProvider();
     }
-    if (modality === "image" || modelId?.includes("flux") || modelId?.includes("nano")) {
-      return this.muapi;
+    if (modality === "audio") {
+      return this.audio.isConfigured() ? this.audio : this.pickZeroCostProvider();
+    }
+    if (modelId?.includes("self-hosted") || modelId?.includes("comfy") || modelId?.includes("local")) {
+      return this.selfHosted.isConfigured() ? this.selfHosted : this.pickZeroCostProvider();
+    }
+    if (modelId?.includes("pollinations") || modelId?.includes("free-cloud")) {
+      return this.pickZeroCostProvider();
+    }
+    if (modelId?.includes("minimax")) {
+      if (this.minimax.isConfigured()) return this.minimax;
+      if (this.muapi.isConfigured()) return this.muapi;
+      return this.pickZeroCostProvider();
+    }
+    if (modality === "image" || modelId?.includes("flux") || modelId?.includes("nano") || modelId?.includes("sd3")) {
+      if (this.muapi.isConfigured()) return this.muapi;
+      return this.pickZeroCostProvider();
     }
     return this.pickProvider(Boolean(hasImage));
   }
 
   /**
-   * Auditable provider selection: free-tier workspaces → self-hosted (zero marginal $);
-   * paid tiers keep the existing paid-provider chain.
+   * Auditable provider selection:
+   * - free-tier → self-hosted / free-cloud (zero $)
+   * - paid-tier → paid keys when present; otherwise same zero-cost chain (never dead-end)
    */
   async resolveProviderForWorkspace(input: {
     workspaceId: string;
@@ -109,15 +133,10 @@ export class GenerationService implements OnModuleInit {
     const freeTier = this.governance.isFreeTierBudget(monthlyBudgetCents);
 
     if (freeTier) {
-      if (this.selfHosted.isConfigured()) {
-        const reason = `free-tier (monthlyBudgetCents=${monthlyBudgetCents} ≤ threshold=${this.governance.freeTierBudgetThresholdCents()})`;
-        this.log.log(`Provider routing: self-hosted (reason=${reason})`);
-        return { provider: this.selfHosted, reason, freeTier: true };
-      }
-      const fallback = this.devMock;
-      const reason = `free-tier without SELFHOSTED_INFERENCE_URL — fallback=${fallback.name}`;
-      this.log.warn(`Provider routing: ${fallback.name} (reason=${reason})`);
-      return { provider: fallback, reason, freeTier: true };
+      const provider = this.pickZeroCostProvider();
+      const reason = `free-tier (monthlyBudgetCents=${monthlyBudgetCents} ≤ threshold=${this.governance.freeTierBudgetThresholdCents()}) → ${provider.name}`;
+      this.log.log(`Provider routing: ${provider.name} (reason=${reason})`);
+      return { provider, reason, freeTier: true };
     }
 
     const provider = this.pickProviderForModality(
@@ -125,13 +144,13 @@ export class GenerationService implements OnModuleInit {
       input.modelId,
       input.hasImage,
     );
-    const reason = `paid-tier (monthlyBudgetCents=${monthlyBudgetCents})`;
+    const reason = `paid-tier (monthlyBudgetCents=${monthlyBudgetCents}) → ${provider.name}`;
     this.log.log(`Provider routing: ${provider.name} (reason=${reason})`);
-    return { provider, reason, freeTier: false };
+    return { provider, reason, freeTier: this.isZeroMarginalCostProvider(provider.name) };
   }
 
   private isZeroMarginalCostProvider(name: string): boolean {
-    return name === "self-hosted" || name === "dev-mock";
+    return name === "self-hosted" || name === "free-cloud" || name === "dev-mock";
   }
 
   async enqueue(
